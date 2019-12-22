@@ -102,7 +102,6 @@ void compile_pattern(const char *pat) {
 	}
 }
 void process(const char* name, int fd) {
-	printf("OK7\n");
 	char* buf = NULL;
 	size_t size = 0;
 	char error[BUF_SIZE];
@@ -112,11 +111,8 @@ void process(const char* name, int fd) {
 	if (file == NULL) {
 		return;
 	}
-	printf("OK8\n");
 	while (getline(&buf, &size, file) != -1) {
-		printf("OK10\n");
 		ret = regexec(&pattern, buf, 0, NULL, 0);
-		printf("OK9\n");
 		if (ret != 0) {
 			if (ret != REG_NOMATCH) {
 				(void) regerror(ret, & pattern, error, sizeof error);
@@ -133,7 +129,6 @@ void process(const char* name, int fd) {
 		}
 	}
 	free(buf);
-	printf("OK10\n");
     if (count_case) {printf("%d\n", count);}
 }
 
@@ -144,28 +139,21 @@ void bad_options() {
 
 void recursive(const char* name, int fd) {
         DIR* dir = fdopendir(fd);
-		printf("OK1\n");
         struct dirent* dir_info;
         struct stat st;
-		printf("OK2\n");
         while ((dir_info = readdir(dir))) {
                if (strcmp(dir_info->d_name, ".") == 0 || strcmp(dir_info->d_name,  "..") == 0) {
                        continue;
-					   printf("OK3\n");
                } 
                else {
                        fstatat(fd, dir_info->d_name, &st, 0);
                        int new_fd = open(dir_info->d_name, O_RDONLY);
-					   printf("OK4\n");
                        if (S_ISDIR(st.st_mode) && new_fd != -1) {
-						   	   printf("OK5\n");
                                recursive(name, new_fd);
                                close(new_fd);
                        }
                        else if (S_ISREG(st.st_mode)){
-						   		printf("OK6\n");
                                 process(name, new_fd);
-								break;
                        }
                }
         }
