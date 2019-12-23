@@ -14,10 +14,10 @@
 
 const uint32_t BUF_SIZE = 1024; 
 char *myname;			/* for error messages */
-int ignore_case = 0;		/* -i option: ignore case */
-int count_case = 0;      /* -c option: count case */
-int extended = 0;		/* -E option: use extended RE's */
-int recursive_case = 0;
+int ignore_case = 0;	/* -i option: ignore case */
+int count_case = 0;     /* -c option: count case */
+int extended = 0;		/* -E option: use extended regular patterns */
+int recursive_case = 0;	/* -R option: use Recursive finding */
 int errors = 0;			/* number of errors */
 
 regex_t pattern;		/* pattern to match */
@@ -116,18 +116,23 @@ void process(const char* name, int fd) {
 		if (ret != 0) {
 			if (ret != REG_NOMATCH) {
 				(void) regerror(ret, & pattern, error, sizeof error);
-				fprintf(stderr, "%s: file %s: %s\n", myname, name, error);
+				fprintf(stderr, "%s: file %s:%s", myname, name, error);
 				free(buf);
 				++errors;
 				return;
 			}
 		} else {
-				if (!count_case) {
-					printf("%s: %s", name, buf);	/* print matching lines */
+				if (!count_case && !recursive_case) {
+					printf("%s:%s", name, buf);	/* print matching lines */
+				}
+				else if (recursive_case) {
+					printf("%s:%s\n", name, buf);
 				}
 				++count;
 		}
 	}
+	fclose(file);
+	close(fd);
 	free(buf);
     if (count_case) {printf("%d\n", count);}
 }
@@ -147,13 +152,13 @@ void recursive(const char* name, int fd) {
                } 
                else {
                        fstatat(fd, dir_info->d_name, &st, 0);
-                       int new_fd = open(dir_info->d_name, O_RDONLY);
+                       int new_fd = openat(fd, dir_info->d_name, O_RDONLY);
                        if (S_ISDIR(st.st_mode) && new_fd != -1) {
-                               recursive(name, new_fd);
+                               recursive(dir_info->d_name, new_fd);
                                close(new_fd);
                        }
                        else if (S_ISREG(st.st_mode)){
-                                process(name, new_fd);
+                                process(dir_info->d_name, new_fd);
                        }
                }
         }
