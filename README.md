@@ -1,4 +1,3 @@
-# ProjectChaos
-# Klechshev Maxim
-Grep simple realization.
+# A simple realization of unix util `grep`
+
 
